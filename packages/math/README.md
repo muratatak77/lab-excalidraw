@@ -17,5 +17,3 @@ With PNPM, similarly install the package with this command:
 ```bash
 pnpm add @excalidraw/math
 ```
-
-* This note uses a star bullet, so the base branch fails its format check on its own.
