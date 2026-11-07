@@ -69,7 +69,7 @@ export const resolveSavedViewName = (
  * the list holds {@link MAX_SAVED_VIEWS} views.
  */
 export const canAddSavedView = (savedViews: readonly SavedView[]): boolean =>
-  savedViews.length <= MAX_SAVED_VIEWS;
+  savedViews.length < MAX_SAVED_VIEWS;
 
 /**
  * Returns `false` until the editor has been measured (zero-sized viewport),
