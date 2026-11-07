@@ -17,6 +17,8 @@ import {
   actionToggleSavedViews,
 } from "../actions";
 
+import { addSavedView, normalizeSavedViewName } from "../savedViews";
+
 import { API } from "./helpers/api";
 import { act, fireEvent, render, waitFor } from "./test-utils";
 
@@ -256,6 +258,22 @@ describe("saved views", () => {
       expect(h.state.savedViews.slice(-2)).toEqual([saved[0], saved[1]]);
     });
 
+    it("doesn't keep a view whose update was rejected at the limit", () => {
+      const full = Array.from({ length: MAX_SAVED_VIEWS }, (_, i) =>
+        makeView(`view-${i}`),
+      );
+      let saved: SavedView | null = null;
+      act(() => {
+        h.app.api.updateScene({ appState: { savedViews: full } });
+        saved = h.app.api.savedViews.save();
+      });
+      // documented case: save() can't see the pending updateScene()
+      expect(saved).not.toBeNull();
+      expect(h.state.savedViews).toBe(full);
+      expect(h.app.api.savedViews.save()).toBeNull();
+      expect(h.state.savedViews).toBe(full);
+    });
+
     it("returns null when the limit is reached", () => {
       API.setAppState({
         savedViews: Array.from({ length: MAX_SAVED_VIEWS }, (_, i) =>
@@ -264,6 +282,37 @@ describe("saved views", () => {
       });
       expect(h.app.api.savedViews.save()).toBeNull();
       expect(h.state.savedViews).toHaveLength(MAX_SAVED_VIEWS);
+    });
+  });
+
+  describe("helpers", () => {
+    it("clamps names without splitting surrogate pairs", () => {
+      const name = `${"a".repeat(79)}😀😀`;
+      const normalized = normalizeSavedViewName(name);
+      expect(normalized).toBe(`${"a".repeat(79)}😀`);
+    });
+
+    it("adds a view unless the list is full", () => {
+      const viewport = {
+        scrollX: -10,
+        scrollY: -20,
+        zoom: { value: 2 as NormalizedZoomValue },
+        width: 1000,
+        height: 800,
+      };
+      const added = addSavedView([makeView("a")], viewport, null, "View");
+      expect(added?.savedView).toMatchObject({
+        name: "View 2",
+        x: 10,
+        y: 20,
+        width: 500,
+        height: 400,
+      });
+      expect(added?.savedViews).toEqual([makeView("a"), added?.savedView]);
+      const full = Array.from({ length: MAX_SAVED_VIEWS }, (_, i) =>
+        makeView(`view-${i}`),
+      );
+      expect(addSavedView(full, viewport, "x", "View")).toBeNull();
     });
   });
 

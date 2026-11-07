@@ -16,11 +16,15 @@ const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
 /**
- * Collapses whitespace and clamps the length. Returns an empty string for
- * names that contain nothing but whitespace.
+ * Collapses whitespace and clamps the length (counted in code points, so
+ * that characters outside the BMP such as emoji are never cut in half).
+ * Returns the normalized name, or an empty string for names that contain
+ * nothing but whitespace.
  */
 export const normalizeSavedViewName = (name: string): string =>
-  name.replace(/\s+/g, " ").trim().slice(0, SAVED_VIEW_NAME_MAX_LENGTH);
+  Array.from(name.replace(/\s+/g, " ").trim())
+    .slice(0, SAVED_VIEW_NAME_MAX_LENGTH)
+    .join("");
 
 /** The scene-coordinate area currently visible in the viewport. */
 export const getVisibleSceneArea = (
@@ -60,13 +64,24 @@ export const resolveSavedViewName = (
   normalizeSavedViewName(name ?? "") ||
   getNextSavedViewName(savedViews, defaultPrefix);
 
-export const canAddSavedView = (savedViews: readonly SavedView[]) =>
+/**
+ * Returns `true` if another view can be added to `savedViews`, `false` once
+ * the list holds {@link MAX_SAVED_VIEWS} views.
+ */
+export const canAddSavedView = (savedViews: readonly SavedView[]): boolean =>
   savedViews.length < MAX_SAVED_VIEWS;
 
-/** false until the editor has been measured (zero-sized viewport) */
-export const canSaveViewport = (appState: ViewportState) =>
+/**
+ * Returns `false` until the editor has been measured (zero-sized viewport),
+ * `true` afterwards.
+ */
+export const canSaveViewport = (appState: ViewportState): boolean =>
   appState.width > 0 && appState.height > 0;
 
+/**
+ * Returns a new saved view, with a fresh id, of the scene area currently
+ * visible in the viewport.
+ */
 export const createSavedView = (
   appState: ViewportState,
   name: string,
@@ -76,12 +91,35 @@ export const createSavedView = (
   ...getVisibleSceneArea(appState),
 });
 
+/**
+ * Appends a view of the visible scene area to `savedViews`, named `name` or a
+ * "View N" default. Returns the created view and the new list, or `null` if
+ * `savedViews` already holds {@link MAX_SAVED_VIEWS} views.
+ */
+export const addSavedView = (
+  savedViews: readonly SavedView[],
+  appState: ViewportState,
+  name: string | null | undefined,
+  defaultPrefix: string,
+): { savedView: SavedView; savedViews: readonly SavedView[] } | null => {
+  if (!canAddSavedView(savedViews)) {
+    return null;
+  }
+  const savedView = createSavedView(
+    appState,
+    resolveSavedViewName(savedViews, name, defaultPrefix),
+  );
+  return { savedView, savedViews: [...savedViews, savedView] };
+};
+
+/** Returns the saved view with the given id, or `null` if there is none. */
 export const getSavedView = (
   savedViews: readonly SavedView[],
   id: string,
 ): SavedView | null => savedViews.find((view) => view.id === id) ?? null;
 
 /**
+ * Returns the `setViewport()` options that show `savedView`'s area. Uses
  * `contain` so that the saved area is shown in full even if the window is now
  * smaller or larger than when the view was saved.
  */
@@ -99,6 +137,10 @@ export const getSavedViewViewportOptions = (
   animation,
 });
 
+/**
+ * Returns `savedViews` with the view `id` renamed. Returns the same list
+ * (by identity) if the name is blank, unchanged, or no view has that id.
+ */
 export const renameSavedView = (
   savedViews: readonly SavedView[],
   id: string,
@@ -119,6 +161,10 @@ export const renameSavedView = (
   return changed ? nextSavedViews : savedViews;
 };
 
+/**
+ * Returns `savedViews` without the view `id`, or the same list (by identity)
+ * if no view has that id.
+ */
 export const removeSavedView = (
   savedViews: readonly SavedView[],
   id: string,

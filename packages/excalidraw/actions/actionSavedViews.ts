@@ -9,14 +9,12 @@ import { CaptureUpdateAction } from "@excalidraw/element";
 import { savedViewsIcon, saveViewIcon } from "../components/icons";
 import { t } from "../i18n";
 import {
-  canAddSavedView,
+  addSavedView,
   canSaveViewport,
-  createSavedView,
   getSavedView,
   getSavedViewViewportOptions,
   removeSavedView,
   renameSavedView,
-  resolveSavedViewName,
 } from "../savedViews";
 
 import { register } from "./register";
@@ -31,7 +29,13 @@ export const actionSaveView = register<{ name?: string } | undefined>({
     if (!canSaveViewport(appState)) {
       return false;
     }
-    if (!canAddSavedView(appState.savedViews)) {
+    const added = addSavedView(
+      appState.savedViews,
+      appState,
+      data?.name,
+      t("savedViews.defaultName"),
+    );
+    if (!added) {
       return {
         appState: {
           ...appState,
@@ -44,18 +48,13 @@ export const actionSaveView = register<{ name?: string } | undefined>({
       };
     }
 
-    const name = resolveSavedViewName(
-      appState.savedViews,
-      data?.name,
-      t("savedViews.defaultName"),
-    );
-    const savedView = createSavedView(appState, name);
-
     return {
       appState: {
         ...appState,
-        savedViews: [...appState.savedViews, savedView],
-        toast: { message: t("savedViews.saved", { name }) },
+        savedViews: added.savedViews,
+        toast: {
+          message: t("savedViews.saved", { name: added.savedView.name }),
+        },
       },
       captureUpdate: CaptureUpdateAction.EVENTUALLY,
     };

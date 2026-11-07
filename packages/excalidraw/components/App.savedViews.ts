@@ -1,13 +1,12 @@
 import { t } from "../i18n";
 import {
+  addSavedView,
   canAddSavedView,
   canSaveViewport,
-  createSavedView,
   getSavedView,
   getSavedViewViewportOptions,
   removeSavedView,
   renameSavedView,
-  resolveSavedViewName,
 } from "../savedViews";
 
 import type { SavedView } from "../types";
@@ -39,6 +38,12 @@ export class AppSavedViews {
    * name, a "View N" default is used. Returns `null` when the scene already
    * holds the maximum number of saved views, or the editor hasn't been
    * measured yet.
+   *
+   * The returned view is stored when React commits the update. One case can
+   * still drop it: if the scene's saved views were replaced in the same batch
+   * before this call (e.g. `updateScene({ appState: { savedViews } })`) with
+   * a list already at the limit, the update is skipped and the view is not
+   * stored. Check `getAll()` after the next render if that can happen.
    */
   save = (name?: string): SavedView | null => {
     // Saves made since the last commit aren't in `this.app.state` yet, so
@@ -47,22 +52,34 @@ export class AppSavedViews {
       this.pendingSaves?.base === this.app.state.savedViews
         ? this.pendingSaves.savedViews
         : this.app.state.savedViews;
-    if (!canAddSavedView(savedViews) || !canSaveViewport(this.app.state)) {
+    if (!canSaveViewport(this.app.state)) {
       return null;
     }
-    const savedView = createSavedView(
+    const added = addSavedView(
+      savedViews,
       this.app.state,
-      resolveSavedViewName(savedViews, name, t("savedViews.defaultName")),
+      name,
+      t("savedViews.defaultName"),
     );
+    if (!added) {
+      return null;
+    }
+    const { savedView } = added;
     this.pendingSaves = {
       base: this.app.state.savedViews,
-      savedViews: [...savedViews, savedView],
+      savedViews: added.savedViews,
     };
-    this.app.setState((prevState) =>
-      canAddSavedView(prevState.savedViews)
-        ? { savedViews: [...prevState.savedViews, savedView] }
-        : null,
-    );
+    this.app.setState((prevState) => {
+      if (canAddSavedView(prevState.savedViews)) {
+        return { savedViews: [...prevState.savedViews, savedView] };
+      }
+      // the view was never stored, so don't count or name later saves
+      // against it
+      if (this.pendingSaves?.savedViews.includes(savedView)) {
+        this.pendingSaves = null;
+      }
+      return null;
+    });
     return savedView;
   };
 
@@ -84,15 +101,22 @@ export class AppSavedViews {
     return true;
   };
 
-  /** Renames a saved view. Blank names are ignored. */
-  rename = (id: string, name: string) => {
+  /**
+   * Renames a saved view. Blank names and unknown ids are ignored. Returns
+   * nothing; the change is visible through `getAll()` after the next render.
+   */
+  rename = (id: string, name: string): void => {
     this.app.setState((prevState) => {
       const savedViews = renameSavedView(prevState.savedViews, id, name);
       return savedViews === prevState.savedViews ? null : { savedViews };
     });
   };
 
-  remove = (id: string) => {
+  /**
+   * Deletes a saved view. Unknown ids are ignored. Returns nothing; the change
+   * is visible through `getAll()` after the next render.
+   */
+  remove = (id: string): void => {
     this.app.setState((prevState) => {
       const savedViews = removeSavedView(prevState.savedViews, id);
       return savedViews === prevState.savedViews ? null : { savedViews };
