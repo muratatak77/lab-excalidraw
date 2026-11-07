@@ -232,6 +232,18 @@
     "frames": "Frames",
     "texts": "Texts"
   },
+  "savedViews": {
+    "title": "Saved views",
+    "saveCurrent": "Save current view",
+    "goTo": "Go to view: {{name}}",
+    "defaultName": "View",
+    "namePlaceholder": "View name",
+    "empty": "No saved views yet. Save the current viewport to come back to it later.",
+    "rename": "Rename",
+    "delete": "Delete",
+    "saved": "Saved \"{{name}}\"",
+    "limitReached": "You can save up to {{count}} views per scene."
+  },
   "buttons": {
     "clearReset": "Reset the canvas",
     "exportJSON": "Export to file",

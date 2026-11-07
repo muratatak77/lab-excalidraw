@@ -498,6 +498,7 @@ export type {
   ViewportStatusFrame,
   ElementRenderOverride,
   ElementRenderOverrides,
+  SavedView,
 } from "./types";
 
 export { zoomToFitBounds, DEFAULT_OVERSCROLL } from "./viewport";

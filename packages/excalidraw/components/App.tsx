@@ -401,6 +401,7 @@ import {
   getSelectionStateForElements,
   selectGroupsForSelectedElements,
 } from "./App.selection";
+import { AppSavedViews } from "./App.savedViews";
 import { AppSelectionTool } from "./App.selectionTool";
 import { AppWrap } from "./App.wrap";
 import BraveMeasureTextError from "./BraveMeasureTextError";
@@ -704,6 +705,7 @@ class App extends React.Component<AppProps, AppState> {
   });
   public wheel: AppWheel = new AppWheel(this);
   public selection: AppSelection = new AppSelection(this);
+  public savedViews: AppSavedViews = new AppSavedViews(this);
   public selectionTool: AppSelectionTool = new AppSelectionTool(this);
   public wrap: AppWrap = new AppWrap(this);
 
@@ -807,6 +809,7 @@ class App extends React.Component<AppProps, AppState> {
         clear: this.resetHistory,
       },
       selection: this.selection,
+      savedViews: this.savedViews,
       setViewport: this.viewport.setViewport,
       getViewportOffsets: this.viewport.getOffsets,
       setElementRenderOverrides: this.setElementRenderOverrides,

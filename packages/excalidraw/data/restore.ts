@@ -108,6 +108,7 @@ import type {
 import type { MarkOptional, Mutable } from "@excalidraw/common/utility-types";
 
 import { getDefaultAppState } from "../appState";
+import { restoreSavedViews } from "../savedViews";
 
 import {
   getNormalizedGridSize,
@@ -1330,6 +1331,10 @@ export const restoreAppState = (
     ),
   };
   nextAppState.fontTopPicks = restoreFontTopPicks(nextAppState.fontTopPicks);
+  // saved views belong to the scene being restored, so never fall back to
+  // the local ones — a file or link without views would otherwise inherit
+  // the bookmarks of whatever scene was open before
+  nextAppState.savedViews = restoreSavedViews(appState.savedViews);
 
   // legacy
   if ((appState as any).currentItemStrokeWidth !== undefined) {

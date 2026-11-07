@@ -2163,6 +2163,26 @@ export const searchIcon = createIcon(
   tablerIconProps,
 );
 
+// tabler-icons: bookmark
+export const savedViewsIcon = createIcon(
+  <g strokeWidth={1.5}>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" />
+  </g>,
+  tablerIconProps,
+);
+
+// tabler-icons: bookmark-plus
+export const saveViewIcon = createIcon(
+  <g strokeWidth={1.5}>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M12 17l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v5" />
+    <path d="M16 19h6" />
+    <path d="M19 16v6" />
+  </g>,
+  tablerIconProps,
+);
+
 // clock-bolt
 export const historyCommandIcon = createIcon(
   <g strokeWidth={1.5}>

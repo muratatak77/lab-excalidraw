@@ -17,7 +17,10 @@ import { getShortcutKey } from "../../shortcut";
 
 import {
   actionClearCanvas,
+  actionGoToSavedView,
   actionLink,
+  actionSaveView,
+  actionToggleSavedViews,
   actionToggleSearchMenu,
   actionToggleTheme,
 } from "../../actions";
@@ -52,6 +55,7 @@ import {
   brainIconThin,
   LibraryIcon,
   historyCommandIcon,
+  savedViewsIcon,
 } from "../icons";
 
 import { TOOLS, getToolLetter } from "../Tools";
@@ -452,6 +456,25 @@ function CommandPaletteInner({
             actionManager.executeAction(actionToggleSearchMenu);
           },
         },
+        actionToCommand(actionToggleSavedViews, DEFAULT_CATEGORIES.app),
+        actionToCommand(actionSaveView, DEFAULT_CATEGORIES.editor),
+        ...uiAppState.savedViews.map(
+          (savedView): CommandPaletteItem => ({
+            label: t("savedViews.goTo", { name: savedView.name }),
+            category: DEFAULT_CATEGORIES.editor,
+            icon: savedViewsIcon,
+            keywords: ["bookmark", "viewport", "camera"],
+            viewMode: true,
+            predicate: () => app.isNavigationEnabled(),
+            perform: () => {
+              actionManager.executeAction(
+                actionGoToSavedView,
+                "commandPalette",
+                savedView.id,
+              );
+            },
+          }),
+        ),
         {
           label: t("labels.shapeSwitch"),
           category: DEFAULT_CATEGORIES.elements,

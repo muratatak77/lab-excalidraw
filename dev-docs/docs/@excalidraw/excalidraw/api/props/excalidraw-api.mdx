@@ -38,6 +38,7 @@ You can use this prop when you want to access some [Excalidraw APIs](https://git
 | [setCursor](#setcursor) | `function` | This API can be used to set customise the mouse cursor on the canvas |
 | [resetCursor](#resetcursor) | `function` | This API can be used to reset to default mouse cursor on the canvas |
 | [toggleSidebar](#toggleSidebar) | `function` | Toggles specific sidebar on/off |
+| [savedViews](#savedviews) | `object` | Reads, creates, navigates to and edits the scene's saved views |
 | [onChange](#onChange) | `function` | Subscribes to change events |
 | [onPointerDown](#onPointerDown) | `function` | Subscribes to `pointerdown` events |
 | [onPointerUp](#onPointerUp) | `function` | Subscribes to `pointerup` events |
@@ -391,6 +392,55 @@ This API can be used to customise the mouse cursor on the canvas and has the bel
 This API can be used to toggle sidebar, optionally opening a specific sidebar tab. It returns whether the sidebar was toggled on or off. If the `force` flag passed, it will force the sidebar to be toggled either on/off.
 
 This API is especially useful when you render a custom [`<Sidebar/>`](/docs/@excalidraw/excalidraw/api/children-components/sidebar), and you want to toggle it from your app based on a user action.
+
+## savedViews
+
+```tsx
+{
+  getAll: () => readonly SavedView[];
+  save: (name?: string) => SavedView | null;
+  goTo: (
+    id: string,
+    opts?: { animation?: boolean | { duration?: number } },
+  ) => boolean;
+  rename: (id: string, name: string) => void;
+  remove: (id: string) => void;
+}
+```
+
+Saved views are named viewports stored with the scene in `appState.savedViews`. Each one records the scene area that was visible when it was saved:
+
+```ts
+type SavedView = {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+```
+
+Users manage them from the **Saved views** tab of the default sidebar (also reachable from the command palette and `<MainMenu.DefaultItems.SavedViews />`).
+
+| Method | Description |
+| --- | --- |
+| `getAll()` | Returns the scene's saved views in creation order. |
+| `save(name?)` | Saves the area currently visible in the viewport. Blank or missing names fall back to `View N`. Returns the new view, or `null` if the scene already holds 50 views or the editor hasn't been measured yet. |
+| `goTo(id, opts?)` | Fits the saved area into the viewport (animated by default), so the same area shows even if the window size changed. Returns `false` if there is no view with that id or navigation is disabled. |
+| `rename(id, name)` | Renames a view. Blank names are ignored. |
+| `remove(id)` | Deletes a view. |
+
+Changes apply on the next render, like [`updateScene`](#updatescene) — read them back through [`onChange`](#onChange) or [`getAppState`](#getappstate). You can also replace the whole list with `updateScene({ appState: { savedViews } })`.
+
+Saved views are included when the scene is saved to a file or a shareable link, and [`restoreAppState`](/docs/@excalidraw/excalidraw/api/utils/restore#restoreappstate) drops malformed entries. They are never taken from `localAppState`, so loading a scene without saved views doesn't inherit the views of the scene that was open before. Saved views are not part of the undo history. They live in `appState`, so a collaboration setup that only syncs elements (like excalidraw.com rooms) doesn't share or store them.
+
+```jsx
+const view = excalidrawAPI.savedViews.save("Architecture overview");
+
+// later
+excalidrawAPI.savedViews.goTo(view.id);
+```
 
 ## resetCursor
 

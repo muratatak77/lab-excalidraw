@@ -143,7 +143,12 @@ export type ActionName =
   | "wrapSelectionInFrame"
   | "toggleWrap"
   | "toggleShapeSwitch"
-  | "togglePolygon";  // changed on the base while this PR was open (1794079317)
+  | "togglePolygon" // changed on the base while this PR was open (1794079317)
+  | "saveView"
+  | "goToSavedView"
+  | "renameSavedView"
+  | "deleteSavedView"
+  | "toggleSavedViews";
 
 export type PanelComponentProps = {
   elements: readonly ExcalidrawElement[];

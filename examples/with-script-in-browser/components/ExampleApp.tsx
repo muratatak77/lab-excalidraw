@@ -22,6 +22,7 @@ import type {
   Gesture,
   LibraryItems,
   PointerDownState as ExcalidrawPointerDownState,
+  SavedView,
 } from "@excalidraw/excalidraw/types";
 
 import initialData from "../initialData";
@@ -124,6 +125,7 @@ export default function ExampleApp({
     {},
   );
   const [comment, setComment] = useState<Comment | null>(null);
+  const [savedViews, setSavedViews] = useState<readonly SavedView[]>([]);
 
   const initialStatePromiseRef = useRef<{
     promise: ResolvablePromise<ExcalidrawInitialDataState | null>;
@@ -139,6 +141,19 @@ export default function ExampleApp({
   useCustom(excalidrawAPI, customArgs);
 
   useHandleLibrary({ excalidrawAPI });
+
+  useEffect(() => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    setSavedViews(excalidrawAPI.savedViews.getAll());
+    // the list keeps its identity until views are added, renamed or removed
+    return excalidrawAPI.onChange((_elements, appState) => {
+      setSavedViews((prev) =>
+        prev === appState.savedViews ? prev : appState.savedViews,
+      );
+    });
+  }, [excalidrawAPI]);
 
   useEffect(() => {
     if (!excalidrawAPI) {
@@ -1007,6 +1022,33 @@ export default function ExampleApp({
           >
             Fit to content, first element
           </button>
+          <div className="example-saved-views">
+            <button
+              type="button"
+              onClick={() => {
+                excalidrawAPI?.savedViews.save();
+              }}
+            >
+              Save current view
+            </button>
+            {savedViews.map((view) => (
+              <span key={view.id} className="example-saved-views__item">
+                <button
+                  type="button"
+                  onClick={() => excalidrawAPI?.savedViews.goTo(view.id)}
+                >
+                  {view.name}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Delete ${view.name}`}
+                  onClick={() => excalidrawAPI?.savedViews.remove(view.id)}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
           <div className="export export-canvas">
             <img src={canvasUrl} alt="" />
           </div>

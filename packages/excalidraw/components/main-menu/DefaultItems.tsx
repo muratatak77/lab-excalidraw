@@ -13,6 +13,7 @@ import {
   actionToggleGridMode,
   actionToggleMidpointSnapping,
   actionToggleObjectsSnapMode,
+  actionToggleSavedViews,
   actionToggleSearchMenu,
   actionToggleShowHints,
   actionToggleStats,
@@ -58,6 +59,7 @@ import {
   LoadIcon,
   MoonIcon,
   save,
+  savedViewsIcon,
   searchIcon,
   SunIcon,
   TrashIcon,
@@ -190,6 +192,26 @@ export const SearchMenu = (opts?: { className?: string }) => {
   );
 };
 SearchMenu.displayName = "SearchMenu";
+
+export const SavedViews = (opts?: { className?: string }) => {
+  const { t } = useI18n();
+  const actionManager = useExcalidrawActionManager();
+
+  return (
+    <DropdownMenuItem
+      icon={savedViewsIcon}
+      data-testid="saved-views-menu-button"
+      onSelect={() => {
+        actionManager.executeAction(actionToggleSavedViews);
+      }}
+      aria-label={t("savedViews.title")}
+      className={opts?.className}
+    >
+      {t("savedViews.title")}
+    </DropdownMenuItem>
+  );
+};
+SavedViews.displayName = "SavedViews";
 
 export const Help = () => {
   const { t } = useI18n();
