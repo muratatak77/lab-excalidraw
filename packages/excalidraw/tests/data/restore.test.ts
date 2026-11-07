@@ -7,6 +7,8 @@ import {
   DEFAULT_SIDEBAR,
   FONT_FAMILY,
   getLineHeight,
+  MAX_SAVED_VIEWS,
+  SAVED_VIEW_NAME_MAX_LENGTH,
   ROUNDNESS,
   STICKY_NOTE_MAX_FONT_SIZE,
   DEFAULT_STICKY_NOTE_BG,
@@ -1279,6 +1281,94 @@ describe("restoreAppState", () => {
         null,
       ).openSidebar,
     ).toEqual({ name: DEFAULT_SIDEBAR.name, tab: "ola" });
+  });
+});
+
+describe("restoreAppState.savedViews", () => {
+  const view = {
+    id: "view-1",
+    name: "Overview",
+    x: -10,
+    y: 20,
+    width: 300,
+    height: 200,
+  };
+
+  it("keeps valid views and normalizes their names", () => {
+    const restored = restore.restoreAppState(
+      { savedViews: [{ ...view, name: "  Over\n view " }] },
+      null,
+    );
+    expect(restored.savedViews).toEqual([{ ...view, name: "Over view" }]);
+  });
+
+  it("drops malformed, duplicate and empty-area views", () => {
+    const restored = restore.restoreAppState(
+      {
+        savedViews: [
+          view,
+          { ...view, name: "duplicate id" },
+          { ...view, id: "no-name", name: "   " },
+          { ...view, id: "nan", x: NaN },
+          { ...view, id: "string-coords", y: "20" },
+          { ...view, id: "empty", width: 0 },
+          { ...view, id: "negative", height: -5 },
+          { ...view, id: "" },
+          null,
+          "view",
+          { ...view, id: "view-2" },
+        ],
+      } as any,
+      null,
+    );
+    expect(restored.savedViews.map((savedView) => savedView.id)).toEqual([
+      "view-1",
+      "view-2",
+    ]);
+  });
+
+  it("caps the number of views and clamps name length", () => {
+    const restored = restore.restoreAppState(
+      {
+        savedViews: Array.from({ length: MAX_SAVED_VIEWS + 5 }, (_, i) => ({
+          ...view,
+          id: `view-${i}`,
+          name: "x".repeat(SAVED_VIEW_NAME_MAX_LENGTH + 20),
+        })),
+      },
+      null,
+    );
+    expect(restored.savedViews).toHaveLength(MAX_SAVED_VIEWS);
+    expect(restored.savedViews[0].name).toHaveLength(
+      SAVED_VIEW_NAME_MAX_LENGTH,
+    );
+  });
+
+  it("resets non-array values", () => {
+    expect(
+      restore.restoreAppState({ savedViews: { 0: view } } as any, null)
+        .savedViews,
+    ).toEqual([]);
+  });
+
+  it("doesn't inherit the local scene's views", () => {
+    const restored = restore.restoreAppState(
+      { viewBackgroundColor: "#ffc9c9" },
+      { ...getDefaultAppState(), savedViews: [view] },
+    );
+    expect(restored.savedViews).toEqual([]);
+  });
+
+  it("survives a file and share-link round trip", () => {
+    const appState = { ...getDefaultAppState(), savedViews: [view] };
+    for (const type of ["local", "database"] as const) {
+      const { appState: exported } = JSON.parse(
+        serializeAsJSON([], appState, {}, type),
+      );
+      expect(restore.restoreAppState(exported, null).savedViews).toEqual([
+        view,
+      ]);
+    }
   });
 });
 

@@ -56,6 +56,17 @@
   text-align: left;
 }
 
+.example-saved-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+
+  &__item {
+    display: inline-flex;
+  }
+}
+
 .export-wrapper {
   display: flex;
   flex-direction: column;

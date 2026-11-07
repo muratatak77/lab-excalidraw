@@ -588,7 +588,24 @@ export interface AppState {
   /** user-customized font-picker top picks (pinned via drag & drop from the
    * font picker popup). `null` means no customization (defaults are used) */
   fontTopPicks: readonly FontFamilyValues[] | null;
+  /** named viewports ("bookmarks") stored with the scene, in the order the
+   * user created them */
+  savedViews: readonly SavedView[];
 }
+
+/**
+ * A named viewport. Stores the scene-coordinate area that was visible when
+ * the view was saved, so navigating back fits the same area regardless of
+ * the current window size.
+ */
+export type SavedView = {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 export type SearchMatch = {
   id: string;
@@ -1421,6 +1438,16 @@ export interface ExcalidrawImperativeAPI {
   selection: Pick<
     InstanceType<typeof App>["selection"],
     "select" | "add" | "remove" | "clear"
+  >;
+  /**
+   * Reads and edits the scene's saved views (named viewports, stored in
+   * `appState.savedViews` and exported with the scene). `save()` captures the
+   * currently visible area, `goTo()` fits it back into the viewport. Edits
+   * apply on the next render, like `updateScene()`.
+   */
+  savedViews: Pick<
+    InstanceType<typeof App>["savedViews"],
+    "getAll" | "save" | "goTo" | "rename" | "remove"
   >;
   getSceneElements: InstanceType<typeof App>["getSceneElements"];
   getAppState: () => InstanceType<typeof App>["state"];

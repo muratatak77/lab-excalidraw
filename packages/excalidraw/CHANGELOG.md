@@ -13,6 +13,12 @@ Please add the latest change on the top under the correct section.
 
 ## Unreleased
 
+### Saved views (2026-11-07)
+
+- Scenes can now hold named viewports. The new **Saved views** tab of the default sidebar saves the visible area of the canvas under a name and jumps back to it, fitting the same area into the viewport whatever the window size. Views can be renamed (double-click or the pencil button) and deleted; in view mode the list is read-only. The command palette gets "Save current view" and a "Go to view: …" command per view, and `<MainMenu.DefaultItems.SavedViews />` opens the tab.
+- Saved views are stored in `appState.savedViews` (type `SavedView`) and are kept in browser storage, `.excalidraw` files and shareable links. `restoreAppState` drops malformed entries, caps the list at 50 views and never takes them from `localAppState`, so opening a scene without saved views doesn't inherit the previous scene's.
+- `excalidrawAPI.savedViews` exposes `getAll()`, `save(name?)`, `goTo(id, opts?)`, `rename(id, name)` and `remove(id)`.
+
 ### Arrows aren't clipped to frames (2026-10-31) [#12516](https://github.com/excalidraw/excalidraw/pull/12516)
 
 - Arrows and their labels are no longer clipped to the frame they belong to, so they can connect elements across and out of frames, and their part outside the frame can be selected. They still belong to their frame, so they're moved, copied and deleted with it, but only while one of their ends is in it (bound to an element in the frame, or inside it). An arrow whose ends both leave its frame (moved, bound to elements outside it, or with the elements it's bound to) leaves the frame.

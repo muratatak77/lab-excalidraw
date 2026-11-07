@@ -536,6 +536,11 @@ export const DEFAULT_ELEMENT_PROPS: {
 
 export const LIBRARY_SIDEBAR_TAB = "library";
 export const CANVAS_SEARCH_TAB = "search";
+export const SAVED_VIEWS_SIDEBAR_TAB = "saved-views";
+
+/** upper bound of saved views kept per scene (imported data is clamped) */
+export const MAX_SAVED_VIEWS = 50;
+export const SAVED_VIEW_NAME_MAX_LENGTH = 80;
 
 export const DEFAULT_SIDEBAR = {
   name: "default",
