@@ -52,7 +52,7 @@ describe("@excalidraw/common/utils", () => {
     });
 
     it("should return false when color is not transparent", () => {
-      expect(isTransparent("#ced4da")).toEqual(true);
+      expect(isTransparent("#ced4da")).toEqual(false);
     });
   });
 
