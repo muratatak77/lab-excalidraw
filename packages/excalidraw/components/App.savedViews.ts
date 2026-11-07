@@ -20,6 +20,15 @@ import type App from "./App";
  * `onChange()` or `getAppState()` after the next render.
  */
 export class AppSavedViews {
+  /**
+   * The list `save()` calls have produced since `base` was the committed
+   * state, while their `setState` is still pending.
+   */
+  private pendingSaves: {
+    base: readonly SavedView[];
+    savedViews: readonly SavedView[];
+  } | null = null;
+
   constructor(private app: App) {}
 
   /** The scene's saved views, in creation order. */
@@ -32,7 +41,12 @@ export class AppSavedViews {
    * measured yet.
    */
   save = (name?: string): SavedView | null => {
-    const { savedViews } = this.app.state;
+    // Saves made since the last commit aren't in `this.app.state` yet, so
+    // count and name new views against them too.
+    const savedViews =
+      this.pendingSaves?.base === this.app.state.savedViews
+        ? this.pendingSaves.savedViews
+        : this.app.state.savedViews;
     if (!canAddSavedView(savedViews) || !canSaveViewport(this.app.state)) {
       return null;
     }
@@ -40,9 +54,15 @@ export class AppSavedViews {
       this.app.state,
       resolveSavedViewName(savedViews, name, t("savedViews.defaultName")),
     );
-    this.app.setState((prevState) => ({
-      savedViews: [...prevState.savedViews, savedView],
-    }));
+    this.pendingSaves = {
+      base: this.app.state.savedViews,
+      savedViews: [...savedViews, savedView],
+    };
+    this.app.setState((prevState) =>
+      canAddSavedView(prevState.savedViews)
+        ? { savedViews: [...prevState.savedViews, savedView] }
+        : null,
+    );
     return savedView;
   };
 

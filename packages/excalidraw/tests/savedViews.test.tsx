@@ -235,6 +235,27 @@ describe("saved views", () => {
       expect(h.state.savedViews).toEqual([]);
     });
 
+    it("counts and names views saved in the same batch", () => {
+      API.setAppState({
+        savedViews: Array.from({ length: MAX_SAVED_VIEWS - 2 }, (_, i) =>
+          makeView(`view-${i}`),
+        ),
+      });
+      let saved: (SavedView | null)[] = [];
+      act(() => {
+        saved = [
+          h.app.api.savedViews.save(),
+          h.app.api.savedViews.save(),
+          h.app.api.savedViews.save(),
+        ];
+      });
+      expect(saved[0]?.name).toBe(`View ${MAX_SAVED_VIEWS - 1}`);
+      expect(saved[1]?.name).toBe(`View ${MAX_SAVED_VIEWS}`);
+      expect(saved[2]).toBeNull();
+      expect(h.state.savedViews).toHaveLength(MAX_SAVED_VIEWS);
+      expect(h.state.savedViews.slice(-2)).toEqual([saved[0], saved[1]]);
+    });
+
     it("returns null when the limit is reached", () => {
       API.setAppState({
         savedViews: Array.from({ length: MAX_SAVED_VIEWS }, (_, i) =>
