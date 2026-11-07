@@ -12,3 +12,5 @@ export * from "./triangle";
 export * from "./types";
 export * from "./vector";
 export * from "./utils";
+
+// Lab note.
